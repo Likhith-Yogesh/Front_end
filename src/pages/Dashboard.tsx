@@ -4,24 +4,29 @@ import Accounts from '../sections/Accounts';
 import Admins from '../sections/Admins';
 import Software from '../sections/Software';
 import DataManagement from '../sections/DataManagement';
+import ExamViewTable from '../sections/ExamViewTable';
+import logo from '../static/inr-apps logo.png';
+import backgroundImage from '../static/INR-Admin-Login.png';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data'>('accounts');
+  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data' | 'pacs'>('accounts');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const menuItems = [
-    { id: 'accounts', label: 'Accounts', icon: '👥' },
-    { id: 'admins', label: 'Admins', icon: '⚙️' },
-    { id: 'software', label: 'Software', icon: '📦' },
-    { id: 'data', label: 'Data Management', icon: '📊' },
+    { id: 'accounts', label: 'Accounts' },
+    { id: 'admins', label: 'Admins'},
+    { id: 'software', label: 'Software' },
+    { id: 'data', label: 'Data Management' },
+    { id: 'pacs', label: 'PACS' },
   ];
 
   return (
     <div className="min-h-screen bg-slate-900 flex">
+      
       {/* Sidebar */}
       <div
         className={`${
@@ -29,10 +34,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         } bg-slate-800 border-r border-slate-700 transition-all duration-300 overflow-hidden`}
       >
         <div className="p-6 border-b border-slate-700">
-          <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-        </div>
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="INR Apps Logo" className="h-16 w-auto" />
+          </div>
+        </div>  
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-4 space-y-2"> 
           {menuItems.map((item) => (
             <button
               key={item.id}
@@ -43,7 +50,6 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   : 'text-slate-300 hover:bg-slate-700'
               }`}
             >
-              <span className="mr-3">{item.icon}</span>
               {item.label}
             </button>
           ))}
@@ -82,6 +88,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           {activeSection === 'admins' && <Admins />}
           {activeSection === 'software' && <Software />}
           {activeSection === 'data' && <DataManagement />}
+          {activeSection === 'pacs' && <ExamViewTable />}
         </div>
       </div>
     </div>
