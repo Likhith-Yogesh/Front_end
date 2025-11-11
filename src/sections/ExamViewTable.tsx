@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, X, Send, Trash2 } from 'lucide-react';
 import examData from '../../test/dummy_exam_data.json';
 
 interface ExamRecord {
@@ -19,9 +19,25 @@ interface ExamRecord {
 export default function ExamViewTable() {
   const [examRecords] = useState<ExamRecord[]>(examData);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedExam, setSelectedExam] = useState<ExamRecord | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStudy, setSelectedStudy] = useState('');
+  const [selectedSeries, setSelectedSeries] = useState('');
+  const [sendDestination, setSendDestination] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Mock data for studies and series
+  const studies = ['Study 1', 'Study 2', 'Study 3'];
+  const series = ['Series A', 'Series B', 'Series C', 'Series D'];
+  
+  // Excelsius systems - all systems available for sending
+  const excelsistusSystems = [
+    { id: 'EHUB-P101', status: 'online' },
+    { id: 'EGPS-P102', status: 'online' },
+    { id: 'E3D-P103', status: 'offline' },
+  ];
 
   // Filter exam records based on search query
   const filteredRecords = examRecords.filter((exam) => {
@@ -52,6 +68,40 @@ export default function ExamViewTable() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
+  };
+
+  const handleExamClick = (exam: ExamRecord) => {
+    setSelectedExam(exam);
+    setIsModalOpen(true);
+    setSelectedStudy('');
+    setSelectedSeries('');
+    setSendDestination('');
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedExam(null);
+    setSelectedStudy('');
+    setSelectedSeries('');
+    setSendDestination('');
+  };
+
+  const handleSend = () => {
+    // Handle send logic here
+    if (!sendDestination) {
+      alert('Please select a destination');
+      return;
+    }
+    alert(`Sending to ${sendDestination}: Study=${selectedStudy}, Series=${selectedSeries}`);
+    handleCloseModal();
+  };
+
+  const handleDelete = () => {
+    // Handle delete logic here
+    if (window.confirm(`Are you sure you want to delete this exam?`)) {
+      alert(`Deleting exam`);
+      handleCloseModal();
+    }
   };
 
   return (
@@ -93,7 +143,8 @@ export default function ExamViewTable() {
               {currentItems.map((exam) => (
                 <tr
                   key={exam.id}
-                  className="border-b border-slate-700/50 hover:bg-slate-700/30 transition"
+                  onClick={() => handleExamClick(exam)}
+                  className="border-b border-slate-700/50 hover:bg-slate-700/30 transition cursor-pointer"
                 >
                   <td className="py-3 px-4 text-white text-sm">{exam.examName}</td>
                   <td className="py-3 px-4 text-slate-300 text-sm">{exam.patientID}</td>
@@ -136,7 +187,7 @@ export default function ExamViewTable() {
 
       {/* Excelsius Hardware Monitoring */}
       <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-        <h4 className="text-lg font-semibold text-white mb-4">Excelsius Hardware Monitoring</h4>
+        <h4 className="text-lg font-semibold text-white mb-4">Excelsius System Status</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <p className="text-slate-400 text-sm">EHUB-P101</p>
@@ -161,6 +212,109 @@ export default function ExamViewTable() {
           </div>
         </div>
       </div>
+
+      {/* Modal Popup */}
+      {isModalOpen && selectedExam && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 w-full max-w-md mx-4">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold text-white">Exam Details</h3>
+              <button
+                onClick={handleCloseModal}
+                className="text-slate-400 hover:text-white transition"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Exam Info */}
+            <div className="mb-4 p-3 bg-slate-700/50 rounded-lg">
+              <p className="text-sm text-slate-300 mb-1">
+                <span className="font-semibold text-white">Patient:</span> {selectedExam.patientID}
+              </p>
+              <p className="text-sm text-slate-300">
+                <span className="font-semibold text-white">Exam:</span> {selectedExam.examName}
+              </p>
+            </div>
+
+            {/* Study Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Select Study
+              </label>
+              <select
+                value={selectedStudy}
+                onChange={(e) => setSelectedStudy(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">-- Select Study --</option>
+                {studies.map((study, index) => (
+                  <option key={index} value={study}>
+                    {study}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Series Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Select Series
+              </label>
+              <select
+                value={selectedSeries}
+                onChange={(e) => setSelectedSeries(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">-- Select Series --</option>
+                {series.map((ser, index) => (
+                  <option key={index} value={ser}>
+                    {ser}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Send Destination Selection */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Send Destination
+              </label>
+              <select
+                value={sendDestination}
+                onChange={(e) => setSendDestination(e.target.value)}
+                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">-- Select Destination --</option>
+                {excelsistusSystems.map((system) => (
+                  <option key={system.id} value={system.id}>
+                    {system.status === 'online' ? '🟢' : '🔴'} {system.id} ({system.status})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={handleSend}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              >
+                <Send className="w-4 h-4" />
+                Send
+              </button>
+              <button
+                onClick={handleDelete}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
