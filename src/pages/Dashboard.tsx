@@ -25,7 +25,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#263740' }}>
       
       {/* Header - Full Width */}
       <div className="border-b border-slate-700 px-4 py-2 flex items-center justify-between" style={{ backgroundColor: '#171E22' }}>
@@ -40,11 +40,12 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
               className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-700 transition"
-            >
+            > 
+              <span className="text-white text-lg font-medium">Test User</span>
               <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
                 <User className="w-8 h-8 text-white" />
               </div>
-              <span className="text-white text-lg font-medium">Test User</span>
+              
               <ChevronDown className="w-4 h-4 text-slate-400" />
             </button>
 
@@ -70,7 +71,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       {/* Main Content Area - Sidebar and Content */}
       <div className="flex flex-1">
         {/* Sidebar */}
-        <div className="w-64 bg-slate-800 border-r border-slate-700">
+        <div className="w-64 bg-slate-800 border-r-4 border-slate-700" style={{backgroundColor: '#263740'}}>
           <nav className="p-4 space-y-2"> 
             {menuItems.map((item) => (
               <button

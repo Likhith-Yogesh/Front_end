@@ -109,7 +109,7 @@ export default function ExamViewTable() {
       <h3 className="text-2xl font-bold text-white">PACS Module</h3>
 
       {/* PACS table */}
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6" style={{backgroundColor: '#223139'}}>
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-lg font-semibold text-white">Exams Table</h4>
           
@@ -186,7 +186,7 @@ export default function ExamViewTable() {
       </div>
 
       {/* Excelsius Hardware Monitoring */}
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
+      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6" style={{backgroundColor: '#223139'}}>
         <h4 className="text-lg font-semibold text-white mb-4">Excelsius System Status</h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
