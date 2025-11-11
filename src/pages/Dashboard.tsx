@@ -4,13 +4,14 @@ import Accounts from '../sections/Accounts';
 import Admins from '../sections/Admins';
 import Software from '../sections/Software';
 import DataManagement from '../sections/DataManagement';
+import SystemMonitor from '../sections/SystemMonitor';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data'>('accounts');
+  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data' | 'monitor'>('accounts');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const menuItems = [
@@ -18,6 +19,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     { id: 'admins', label: 'Admins', icon: '⚙️' },
     { id: 'software', label: 'Software', icon: '📦' },
     { id: 'data', label: 'Data Management', icon: '📊' },
+    { id: 'monitor', label: 'System Monitor', icon: '🖥️' }, // ADD THIS LINE
   ];
 
   return (
@@ -82,6 +84,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           {activeSection === 'admins' && <Admins />}
           {activeSection === 'software' && <Software />}
           {activeSection === 'data' && <DataManagement />}
+          {activeSection === 'monitor' && <SystemMonitor />} {/* ADD THIS LINE */}
         </div>
       </div>
     </div>
