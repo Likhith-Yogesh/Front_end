@@ -4,6 +4,7 @@ import Accounts from '../sections/Accounts';
 import Admins from '../sections/Admins';
 import Software from '../sections/Software';
 import DataManagement from '../sections/DataManagement';
+import SystemMonitor from '../sections/SystemMonitor';
 import ExamViewTable from '../sections/ExamViewTable';
 import logo from '../static/inr-apps logo.png';
 import backgroundImage from '../static/INR-Admin-Login.png';
@@ -13,15 +14,16 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data' | 'pacs'>('accounts');
+  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'software' | 'data' | 'pacs' | 'monitor'>('accounts');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const menuItems = [
     { id: 'accounts', label: 'Accounts' },
-    { id: 'admins', label: 'Admins'},
+    { id: 'admins', label: 'Admins' },
     { id: 'software', label: 'Software' },
     { id: 'data', label: 'Data Management' },
     { id: 'pacs', label: 'PACS' },
+    { id: 'monitor', label: 'System Monitor' },
   ];
 
   return (
@@ -96,6 +98,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           {activeSection === 'software' && <Software />}
           {activeSection === 'data' && <DataManagement />}
           {activeSection === 'pacs' && <ExamViewTable />}
+          {activeSection === 'monitor' && <SystemMonitor />}
         </div>
       </div>
     </div>
