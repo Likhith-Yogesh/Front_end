@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { LogOut, ChevronDown, User } from 'lucide-react';
-import Accounts from '../sections/Accounts';
-import Admins from '../sections/Admins';
 import WorkList from '../sections/WorkList';
-import DataManagement from '../sections/DataManagement';
 import SystemMonitor from '../sections/SystemMonitor';
 import ExamViewTable from '../sections/ExamViewTable';
 import logo from '../static/inr-apps logo.png';
@@ -14,14 +11,11 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<'accounts' | 'admins' | 'worklist' | 'data' | 'pacs' | 'monitor'>('accounts');
+  const [activeSection, setActiveSection] = useState<'worklist' | 'pacs' | 'monitor'>('pacs');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const menuItems = [
-    { id: 'accounts', label: 'Accounts' },
-    { id: 'admins', label: 'Admins' },
-    { id: 'worklist', label: 'WorkList' },
-    { id: 'data', label: 'Data Management' },
+  const menuItems = [  
+    { id: 'worklist', label: 'WorkList' },    
     { id: 'pacs', label: 'PACS' },
     { id: 'monitor', label: 'System Monitor' },
   ];
@@ -36,7 +30,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <img src={logo} alt="INR Apps Logo" className="h-15 w-60" />
         </div>
         {/* right side - User Avatar */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4">""
           {/* User Avatar with Dropdown */}
           <div className="relative">
             <button
@@ -92,11 +86,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-auto p-6">
-          {activeSection === 'accounts' && <Accounts />}
-          {activeSection === 'admins' && <Admins />}
-          {activeSection === 'worklist' && <WorkList />}
-          {activeSection === 'data' && <DataManagement />}
+        <div className="flex-1 overflow-auto p-6">                  
+          {activeSection === 'worklist' && <WorkList />}          
           {activeSection === 'pacs' && <ExamViewTable />}
           {activeSection === 'monitor' && <SystemMonitor />}
         </div>
