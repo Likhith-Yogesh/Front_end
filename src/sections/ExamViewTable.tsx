@@ -185,34 +185,6 @@ export default function ExamViewTable() {
         </div>
       </div>
 
-      {/* Excelsius Hardware Monitoring */}
-      <div className="bg-slate-800 border border-slate-700 rounded-lg p-6" style={{backgroundColor: '#223139'}}>
-        <h4 className="text-lg font-semibold text-white mb-4">Excelsius System Status</h4>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <p className="text-slate-400 text-sm">EHUB-P101</p>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-white text-sm font-medium">online</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-slate-400 text-sm">EGPS-P102</p>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-white text-sm font-medium">online</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <p className="text-slate-400 text-sm">E3D-P103</p>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-              <span className="text-white text-sm font-medium">offline</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Modal Popup */}
       {isModalOpen && selectedExam && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
