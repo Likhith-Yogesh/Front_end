@@ -38,8 +38,6 @@ interface NewModalityForm {
 }
 
 export default function SystemMonitor() {
-  const [currentTime, setCurrentTime] = useState(new Date());
-
   const [orthancUrl] = useState('/orthanc-api');
   const [modalities, setModalities] = useState<ModalityDisplay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,19 +59,64 @@ export default function SystemMonitor() {
     allowNEventReport: false,
   });
 
-  // Update clock
+  // Load Excelsius systems on mount
   useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timeInterval);
+    setModalities(excelsistusSystems);
+    setLoading(false);
   }, []);
 
-  // Fetch modalities from Orthanc on load
-  useEffect(() => {
-    fetchModalities();
-  }, []);
+  // Excelsius systems - displayed as DICOM modalities
+  const excelsistusSystems: ModalityDisplay[] = [
+    {
+      name: 'EHUB-P101',
+      AET: 'EHUB-P101',
+      Host: '192.168.1.101',
+      Port: 4242,
+      Manufacturer: 'Excelsius',
+      AllowEcho: true,
+      AllowStore: true,
+      AllowFind: true,
+      AllowGet: true,
+      AllowMove: true,
+      AllowNAction: false,
+      AllowNEventReport: false,
+      status: 'online',
+      lastChecked: new Date().toISOString(),
+      responseTime: 45,
+    },
+    {
+      name: 'EGPS-P102',
+      AET: 'EGPS-P102',
+      Host: '192.168.1.102',
+      Port: 4242,
+      Manufacturer: 'Excelsius',
+      AllowEcho: true,
+      AllowStore: true,
+      AllowFind: true,
+      AllowGet: true,
+      AllowMove: true,
+      AllowNAction: false,
+      AllowNEventReport: false,
+      status: 'online',
+      lastChecked: new Date().toISOString(),
+      responseTime: 38,
+    },
+    {
+      name: 'E3D-P103',
+      AET: 'E3D-P103',
+      Host: '192.168.1.103',
+      Port: 4242,
+      Manufacturer: 'Excelsius',
+      AllowEcho: true,
+      AllowStore: true,
+      AllowFind: true,
+      AllowGet: true,
+      AllowMove: true,
+      AllowNAction: false,
+      AllowNEventReport: false,
+      status: 'offline',
+    },
+  ];
 
   // Fetch all modalities from Orthanc
   const fetchModalities = async () => {
@@ -359,8 +402,7 @@ export default function SystemMonitor() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h3 className="text-3xl font-bold text-white mb-1">System Monitor</h3>
-          <p className="text-slate-400 text-sm">DICOM Modality Management with Orthanc API</p>
+          <h3 className="text-2xl font-bold text-white mb-1">System Monitor</h3>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -380,12 +422,6 @@ export default function SystemMonitor() {
             <RefreshCw className="w-4 h-4" />
             Refresh
           </button>
-          <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg border border-slate-700">
-            <Clock className="w-4 h-4 text-slate-400" />
-            <span className="text-sm font-medium text-white font-mono">
-              {currentTime.toLocaleTimeString()}
-            </span>
-          </div>
         </div>
       </div>
 
@@ -438,12 +474,12 @@ export default function SystemMonitor() {
                 <p className="text-slate-400 text-sm">{totalModalities} devices configured</p>
               </div>
             </div>
-            {loading && (
+            {/* {loading && (
               <div className="flex items-center gap-2 text-blue-300">
                 <RefreshCw className="w-4 h-4 animate-spin" />
                 <span className="text-sm">Loading...</span>
               </div>
-            )}
+            )} */}
           </div>
         </div>
 
