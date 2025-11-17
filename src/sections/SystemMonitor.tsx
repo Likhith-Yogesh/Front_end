@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Cpu, HardDrive, Activity, Server, AlertTriangle, CheckCircle, Wifi, WifiOff, Monitor, RefreshCw, Clock, Globe, Layers, Zap, Network, Plus, Edit, Trash2, TestTube2 } from 'lucide-react';
+import { Server, CheckCircle, RefreshCw, Clock, Globe, Plus, Edit, Trash2, TestTube2 } from 'lucide-react';
 import Modal from '../components/Modal';
 
 interface ModalityConfig {
@@ -37,20 +37,8 @@ interface NewModalityForm {
   allowNEventReport: boolean;
 }
 
-interface ServiceStatus {
-  name: string;
-  port: number;
-  description: string;
-  category: 'core' | 'tracking' | 'database';
-}
-
 export default function SystemMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [performanceMetrics, setPerformanceMetrics] = useState({
-    memory: 0,
-    cpuCores: 0,
-    connection: 'Unknown',
-  });
 
   const [orthancUrl] = useState('/orthanc-api');
   const [modalities, setModalities] = useState<ModalityDisplay[]>([]);
@@ -73,29 +61,11 @@ export default function SystemMonitor() {
     allowNEventReport: false,
   });
 
-  const [expectedServices] = useState<ServiceStatus[]>([
-    { name: 'Orthanc DICOM', port: 8042, description: 'Main server', category: 'core' },
-    { name: 'Worklist SCP', port: 4242, description: 'Worklist', category: 'core' },
-    { name: 'Modality Monitor', port: 5000, description: 'Device monitoring', category: 'tracking' },
-    { name: 'Navigation Service', port: 3000, description: 'Nav system', category: 'tracking' },
-    { name: 'PostgreSQL', port: 5432, description: 'Database', category: 'database' },
-    { name: 'Redis Cache', port: 6379, description: 'Cache layer', category: 'database' },
-  ]);
-
   // Update clock
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
-
-    if (performance && (performance as any).memory) {
-      const memory = (performance as any).memory;
-      setPerformanceMetrics({
-        memory: memory.usedJSHeapSize / memory.jsHeapSizeLimit,
-        cpuCores: navigator.hardwareConcurrency || 0,
-        connection: (navigator as any).connection?.effectiveType || 'Unknown',
-      });
-    }
 
     return () => clearInterval(timeInterval);
   }, []);
@@ -143,7 +113,7 @@ export default function SystemMonitor() {
     } catch (error) {
       console.error('Error fetching modalities:', error);
       setLoading(false);
-      alert('⚠️ Could not connect to Orthanc server. Make sure it is running at ' + orthancUrl);
+      alert('⚠️ Could not connect to Orthanc server. Make sure it is running.');
     }
   };
 
@@ -174,7 +144,7 @@ export default function SystemMonitor() {
         alert(`✅ Modality "${newModality.aet}" created successfully!`);
         setShowCreateModal(false);
         resetForm();
-        fetchModalities(); // Refresh list
+        fetchModalities();
       } else {
         const errorText = await response.text();
         alert(`❌ Failed to create modality: ${errorText}`);
@@ -210,7 +180,7 @@ export default function SystemMonitor() {
         setShowEditModal(false);
         setSelectedModality(null);
         resetForm();
-        fetchModalities(); // Refresh list
+        fetchModalities();
       } else {
         const errorText = await response.text();
         alert(`❌ Failed to update modality: ${errorText}`);
@@ -236,7 +206,7 @@ export default function SystemMonitor() {
 
       if (response.ok) {
         alert(`✅ Modality "${aet}" deleted successfully!`);
-        fetchModalities(); // Refresh list
+        fetchModalities();
       } else {
         const errorText = await response.text();
         alert(`❌ Failed to delete modality: ${errorText}`);
@@ -249,7 +219,6 @@ export default function SystemMonitor() {
 
   // Test C-ECHO
   const handleTestEcho = async (aet: string) => {
-    // Update status to testing
     setModalities(prev => 
       prev.map(m => m.name === aet ? { ...m, status: 'testing' as const } : m)
     );
@@ -382,19 +351,6 @@ export default function SystemMonitor() {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'core':
-        return <Zap className="w-4 h-4" />;
-      case 'tracking':
-        return <Network className="w-4 h-4" />;
-      case 'database':
-        return <HardDrive className="w-4 h-4" />;
-      default:
-        return <Server className="w-4 h-4" />;
-    }
-  };
-
   const onlineModalities = modalities.filter(m => m.status === 'online').length;
   const totalModalities = modalities.length;
 
@@ -433,8 +389,8 @@ export default function SystemMonitor() {
         </div>
       </div>
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Overview Cards - KEEPING ONLY Total and Online */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-500/30 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2 bg-blue-500/30 rounded-lg">
@@ -465,36 +421,6 @@ export default function SystemMonitor() {
               className="h-full bg-green-400"
               style={{ width: totalModalities > 0 ? `${(onlineModalities / totalModalities) * 100}%` : '0%' }}
             />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/30 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-purple-500/30 rounded-lg">
-              <Cpu className="w-6 h-6 text-purple-300" />
-            </div>
-            <div className="text-right">
-              <p className="text-purple-200 text-xs font-medium">CPU Cores</p>
-              <p className="text-3xl font-bold text-white">{performanceMetrics.cpuCores}</p>
-            </div>
-          </div>
-          <div className="h-1 bg-purple-500/30 rounded-full overflow-hidden">
-            <div className="h-full bg-purple-400 w-full" />
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-orange-600/20 to-orange-800/20 border border-orange-500/30 rounded-xl p-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="p-2 bg-orange-500/30 rounded-lg">
-              <HardDrive className="w-6 h-6 text-orange-300" />
-            </div>
-            <div className="text-right">
-              <p className="text-orange-200 text-xs font-medium">Memory</p>
-              <p className="text-3xl font-bold text-white">{(performanceMetrics.memory * 100).toFixed(0)}%</p>
-            </div>
-          </div>
-          <div className="h-1 bg-orange-500/30 rounded-full overflow-hidden">
-            <div className="h-full bg-orange-400" style={{ width: `${performanceMetrics.memory * 100}%` }} />
           </div>
         </div>
       </div>
@@ -632,95 +558,9 @@ export default function SystemMonitor() {
         </div>
       </div>
 
-      {/* Services and System Info */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Expected Services */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Server className="w-5 h-5 text-blue-400" />
-            PACS Services Configuration
-          </h4>
-          <div className="space-y-2">
-            {expectedServices.map((service) => (
-              <div
-                key={service.name}
-                className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg hover:bg-slate-700 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      service.category === 'core'
-                        ? 'bg-blue-500/20 text-blue-400'
-                        : service.category === 'tracking'
-                        ? 'bg-purple-500/20 text-purple-400'
-                        : 'bg-green-500/20 text-green-400'
-                    }`}
-                  >
-                    {getCategoryIcon(service.category)}
-                  </div>
-                  <div>
-                    <p className="text-white font-medium text-sm">{service.name}</p>
-                    <p className="text-slate-400 text-xs">{service.description}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-slate-400 text-xs font-mono">:{service.port}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* System Info */}
-        <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">
-          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Monitor className="w-5 h-5 text-green-400" />
-            Browser Environment
-          </h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-blue-400" />
-                <span className="text-slate-300 text-sm">CPU Cores</span>
-              </div>
-              <span className="text-white font-semibold">{performanceMetrics.cpuCores}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-purple-400" />
-                <span className="text-slate-300 text-sm">JS Heap Usage</span>
-              </div>
-              <span className="text-white font-semibold">{(performanceMetrics.memory * 100).toFixed(1)}%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Wifi className="w-4 h-4 text-green-400" />
-                <span className="text-slate-300 text-sm">Connection</span>
-              </div>
-              <span className="text-white font-semibold">{performanceMetrics.connection}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4 text-orange-400" />
-                <span className="text-slate-300 text-sm">Online Status</span>
-              </div>
-              <span className="text-white font-semibold">{navigator.onLine ? '✅ Online' : '❌ Offline'}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-yellow-400" />
-                <span className="text-slate-300 text-sm">Platform</span>
-              </div>
-              <span className="text-white font-semibold text-xs">{navigator.platform}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Create Modality Modal */}
       <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Create DICOM Modality">
         <div className="space-y-4">
-          {/* Basic Information */}
           <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600">
             <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
               <Server className="w-4 h-4" />
@@ -779,16 +619,6 @@ export default function SystemMonitor() {
             </div>
           </div>
 
-          {/* API Info */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
-            <p className="text-blue-300 text-xs">
-              <strong>Orthanc API:</strong> PUT /modalities/{'{aet}'}
-              <br />
-              Connected to: <code className="bg-slate-800 px-1 rounded">{orthancUrl}</code>
-            </p>
-          </div>
-
-          {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => setShowCreateModal(false)}
@@ -817,7 +647,6 @@ export default function SystemMonitor() {
         title={`Edit Modality: ${selectedModality}`}
       >
         <div className="space-y-4">
-          {/* Basic Information */}
           <div className="bg-slate-700/30 rounded-lg p-4 border border-slate-600">
             <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
               <Server className="w-4 h-4" />
@@ -875,7 +704,6 @@ export default function SystemMonitor() {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => {
