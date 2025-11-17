@@ -1,23 +1,20 @@
 import { useState } from 'react';
 import { LogOut, ChevronDown, User } from 'lucide-react';
 import WorkList from '../sections/WorkList';
-import SystemMonitor from '../sections/SystemMonitor';
-import ExamViewTable from '../sections/ExamViewTable';
+import PACS from '../sections/PACS';
 import logo from '../static/inr-apps logo.png';
-import backgroundImage from '../static/INR-Admin-Login.png';
 
 interface DashboardProps {
   onLogout: () => void;
 }
 
 export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeSection, setActiveSection] = useState<'worklist' | 'pacs' | 'monitor'>('pacs');
+  const [activeSection, setActiveSection] = useState<'worklist' | 'pacs'>('pacs');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const menuItems = [  
     { id: 'worklist', label: 'WorkList' },    
     { id: 'pacs', label: 'PACS' },
-    { id: 'monitor', label: 'System Monitor' },
   ];
 
   return (
@@ -30,7 +27,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           <img src={logo} alt="INR Apps Logo" className="h-15 w-60" />
         </div>
         {/* right side - User Avatar */}
-        <div className="flex items-center gap-4">""
+        <div className="flex items-center gap-4">
           {/* User Avatar with Dropdown */}
           <div className="relative">
             <button
@@ -88,8 +85,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         {/* Content Area */}
         <div className="flex-1 overflow-auto p-6">                  
           {activeSection === 'worklist' && <WorkList />}          
-          {activeSection === 'pacs' && <ExamViewTable />}
-          {activeSection === 'monitor' && <SystemMonitor />}
+          {activeSection === 'pacs' && <PACS />}
         </div>
       </div>
     </div>
