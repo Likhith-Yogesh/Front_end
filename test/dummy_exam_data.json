@@ -51,19 +51,6 @@
     "studyInstanceUID": "2.16.840.1.114587.227540/364.7624.1752767407.5157",
     "studyID": "526"
   },
-    {
-    "id": 4,
-    "examName": "E3D-SWDS-PERFORMANCE^117 - E3D-SWDS-s100",
-    "patientID": "174C6YMK",
-    "patientBirthDate": "Friday, October 31, 2025",
-    "patientSex": "M",
-    "studyDate": "Friday, October 31, 2025",
-    "accessionNumber": "",
-    "institutionName": "",
-    "referringPhysicianName": "",
-    "studyInstanceUID": "2.16.840.1.114587.227540/364.2696.1761924416.798",
-    "studyID": "47"
-  },
   {
     "id": 5,
     "examName": "FluoroCt*PIL -",

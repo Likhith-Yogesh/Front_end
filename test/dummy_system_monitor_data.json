@@ -1,0 +1,26 @@
+[
+    {
+        "name": "EHUB-P101",
+        "AET": "EHUB-P101",
+        "Host": "192.168.1.101",
+        "Port": 4242,
+        "Manufacturer": "Excelsius",
+        "status": "online"
+    },
+    {
+      "name": "EGPS-P102",
+      "AET": "EGPS-P102",
+      "Host": "192.168.1.102",
+      "Port": 4242,
+      "Manufacturer": "Excelsius",
+      "status": "online"
+    },
+    {
+        "name": "E3D-P103",
+        "AET": "E3D-P103",
+        "Host": "192.168.1.103",
+        "Port": 4242,
+        "Manufacturer": "Excelsius",
+        "status": "offline"
+    }
+]
