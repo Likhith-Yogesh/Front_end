@@ -1,0 +1,7 @@
+{
+    "host": "localhost",
+    "port": 8043,
+    "username": "TestUser",
+    "password": "Globus1234!",
+    "DicomPort": 4242
+}
