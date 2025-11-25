@@ -23,8 +23,27 @@ export const getSystemInfo = async () => {
     return { status: response.status, data };
 }
 
-export const getAllSeries = async () => {
-    const response = await fetch(`${API_BASE_URL}/series`, {
+export const getSeries = async (seriesID?: string) => {
+    seriesID = seriesID || "";
+    const response = await fetch(`${API_BASE_URL}/series/${seriesID}`, {
+        headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+}
+
+export const getPatients = async (patientsID?: string) => {
+    patientsID = patientsID || "";
+    const response = await fetch(`${API_BASE_URL}/patients/${patientsID}`, {
+        headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+}
+
+export const getStudies = async (studiesID?: string) => {
+    studiesID = studiesID || "";
+    const response = await fetch(`${API_BASE_URL}/studies/${studiesID}`, {
         headers: getAuthHeaders()
     });
     const data = await response.json();
@@ -61,7 +80,9 @@ export const createNewModality = async (modalityName: string, modalityData:strin
 
 const OrthancAPI = {
     getSystemInfo,
-    getAllSeries,
+    getPatients,
+    getStudies,
+    getSeries,
     getInstanceAllTags,
     createNewModality
 };
