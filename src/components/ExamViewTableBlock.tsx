@@ -1,11 +1,11 @@
 import { getPatients } from "../libs/orthancAPI/endpoint";
 import logger from "../libs/logger";
-import ExamViewTable from "../sections/ExamViewTable";
-import { ChevronLeft, ChevronRight, Search, X, Send, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import TextBox from "./textBox";
+import ExamViewTablePopupWindow from "./ExamViewTablePopupWindow";
 import { useState, useEffect } from 'react';
 
-interface PatientProp {
+export interface PatientProp {
   ID: string,
   isProtected?: boolean,
   isStable?: boolean,
@@ -27,7 +27,8 @@ const fetchPatientIDs = async (): Promise<string[]> => {
         const response = await getPatients();
         logger.info('Fetched patients successfully', { 
             code: response.status,
-            count: response.data.length });
+            count: response.data.length,
+            body: response.data });
         return response.data;
     } catch (error) {
         logger.error('Failed to fetch patients', {msgerror: error});
@@ -47,7 +48,8 @@ const fetchPatientDetails = async (patientID: string): Promise<PatientProp | nul
                 responseType: data.Type });
             return null;
         }
-        logger.info(`Fetched patient details for ID: ${patientID}`, { code: response.status });
+        logger.info(`Fetched patient details for ID: ${patientID}`, { code: response.status,
+                                                                      body: data });
         return data;
     } catch (error) {
         logger.error(`Failed to fetch patient details for ID: ${patientID}`, {msgerror: error});
@@ -61,6 +63,8 @@ export default function ExamViewTableBlock() {
     const [loading, setLoading] = useState(true)
     const [currentPage, setCurrentPage] = useState(1)
     const [itemsPerPage] = useState(10)
+    const [selectedPatientDetails, setSelectedPatientDetails] = useState<PatientProp | null>(null)
+    const [showPopup, setShowPopup] = useState(false)
 
     // Fetch patients on component mount
     useEffect(() => {
@@ -73,12 +77,11 @@ export default function ExamViewTableBlock() {
                 return
             }
 
-            // Fetch details for each patient
             const patientDetails = await Promise.all(
                 patientIDs.map(id => fetchPatientDetails(id))
             )
 
-            // Filter out null values (failed fetches)
+            // Filter out null value
             const validPatients = patientDetails.filter(p => p !== null) as PatientProp[]
             setPatients(validPatients)
             setLoading(false)
@@ -115,6 +118,17 @@ export default function ExamViewTableBlock() {
         setCurrentPage((prev) => Math.max(prev - 1, 1))
     }
 
+    // Handle row click to show popup
+    const handleRowClick = (patientDetails: PatientProp) => {
+        setSelectedPatientDetails(patientDetails)
+        setShowPopup(true)
+    }
+
+    const handleClosePopup = () => {
+        setShowPopup(false)
+        setSelectedPatientDetails(null)
+    }
+
     return (
         <div className="bg-slate-800 border border-slate-700 rounded-lg p-6" style={{backgroundColor: '#223139'}}>
             <div className="flex items-center justify-between mb-4">
@@ -146,6 +160,7 @@ export default function ExamViewTableBlock() {
                         {currentItems.map((patient) => (
                             <tr
                                 key={patient.ID}
+                                onClick={() => handleRowClick(patient)}
                                 className="border-b border-slate-700/50 hover:bg-slate-700/30 transition cursor-pointer"
                             >
                                 <td className="py-3 px-4 text-white text-sm">{patient.MainDicomTags?.PatientID || patient.ID}</td>
@@ -184,6 +199,14 @@ export default function ExamViewTableBlock() {
                     </button>
                 </div>
             </div>
+
+            {/* Popup Window */}
+            {showPopup && selectedPatientDetails && (
+                <ExamViewTablePopupWindow
+                    patientDetails={selectedPatientDetails}
+                    onClose={handleClosePopup}
+                />
+            )}
         </div>
     )
 }
