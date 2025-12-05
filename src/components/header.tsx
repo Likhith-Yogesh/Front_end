@@ -2,7 +2,7 @@ import { LogOut, ChevronDown, User } from 'lucide-react'
 import { useState } from 'react'
 
 interface HeaderProps {
-  application?: string   // Name of the application to display
+  application?: string | React.ReactNode   // Name or logo of the application
   userName?: string      // Name of the user to display
   onLogout?: () => void  // Logout handler
   onExit?: () => void    // Exit handler
@@ -20,13 +20,9 @@ export default function Header({
 
   return (
     <div className="border-b border-slate-700 px-4 py-2 flex items-center justify-between" style={{ backgroundColor: '#171E22' }}>
-      {/* Left side - Application name */}
+      {/* Left side - Application name or logo */}
       <div className="flex items-center">
-        {application ? (
-          <h1 className="text-white text-xl font-bold">{application}</h1>
-        ) : (
-          <h1 className="text-white text-xl font-bold">Application</h1>
-        )}
+        { typeof application === 'string' ? (<h1 className="text-white text-xl font-bold">{application}</h1>) : (application)}
       </div>
 
       {/* Right side - User Menu */}
