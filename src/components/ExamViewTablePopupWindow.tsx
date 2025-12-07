@@ -1,8 +1,9 @@
-import { getStudies, getSeries } from "../libs/orthancAPI/endpoint";
+import { getStudies, getSeries, getModalities, testModalityEcho } from "../libs/orthancAPI/endpoint";
 import logger from "../libs/logger";
 import DropDown from "./dropDown";
 import { PatientProp } from './ExamViewTableBlock';
 import { useState, useEffect } from 'react';
+import type { ModalityStatus } from '../types/modality';
 
 interface StudyProp {
   ID: string;
@@ -57,10 +58,6 @@ interface SeriesProp {
   Type: "Series";
 }
 
-interface AvailableRobotProp {
-    // TODO: interface with system monitoring data
-}
-
 interface ExamViewTablePopupWindowProps {
   readonly patientDetails: PatientProp;
   readonly onClose: () => void;
@@ -71,7 +68,7 @@ const fetchStudyDetails = async (studyID: string): Promise<StudyProp | null> => 
     try {
         const response = await getStudies(studyID);
         const data = response.data as StudyProp;
-        if (data.Type !== "Study" && !data.ID) {  // validation check for patient data
+        if (data.Type !== "Study" && !data.ID) {
             logger.error(`Invalid study data: `, { 
                 code: response.status,
                 studyID: studyID,
@@ -92,7 +89,7 @@ const fetchSeriesDetails = async (seriesID: string): Promise<SeriesProp | null> 
     try {
         const response = await getSeries(seriesID);
         const data = response.data as SeriesProp;
-        if (data.Type !== "Series" && !data.ID) {  // validation check for series data
+        if (data.Type !== "Series" && !data.ID) {
             logger.error(`Invalid series data: `, {
                 code: response.status,
                 seriesID: seriesID,
@@ -116,6 +113,8 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
   const [selectedStudyId, setSelectedStudyId] = useState<string>('');
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>('');
   const [selectedRobot, setSelectedRobot] = useState<string>('');
+  const [availableRobots, setAvailableRobots] = useState<ModalityStatus[]>([]);
+  const [loadingRobots, setLoadingRobots] = useState(false);
 
   // fetch study details when patientDetails change
   useEffect(() => {
@@ -169,10 +168,71 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
     if (selectedStudyId) {
         loadSeries();
     } else {
-        setLoading(false);
+        setLoadingSeries(false);
     }
   }, [selectedStudyId]);
 
+  // Fetch available robots on component mount
+  useEffect(() => {
+    const loadRobots = async () => {
+        setLoadingRobots(true);
+        try {
+            const response = await getModalities();
+            
+            if (response.status !== 200) {
+                logger.error('Failed to fetch modalities', { status: response.status });
+                setLoadingRobots(false);
+                return;
+            }
+
+            const modalitiesData = response.data;
+            
+            // Transform Orthanc modality data to ModalityStatus format
+            const modalitiesArray = await Promise.all(
+                Object.entries(modalitiesData).map(async ([aet, config]: [string, any]) => {
+                    const modalityStatus: ModalityStatus = {
+                        aet: aet,
+                        host: config[1] || config.Host || 'Unknown',
+                        port: config[2] || config.Port || 4242,
+                        manufacturer: config[3] || config.Manufacturer || 'Generic',
+                        isOnline: false,
+                        isCreatedSuccessfully: true, // If it exists in Orthanc, it was created successfully
+                        lastChecked: new Date().toISOString(),
+                        responseTime: null
+                    };
+
+                    // Test connectivity with C-ECHO
+                    try {
+                        const startTime = Date.now();
+                        const echoResponse = await testModalityEcho(aet);
+                        const responseTime = Date.now() - startTime;
+                        
+                        if (echoResponse.status === 200) {
+                            modalityStatus.isOnline = true;
+                            modalityStatus.responseTime = responseTime;
+                            logger.info(`Modality ${aet} is online`, { responseTime });
+                        } else {
+                            logger.warn(`Modality ${aet} C-ECHO failed`, { status: echoResponse.status });
+                        }
+                    } catch (error) {
+                        logger.error(`C-ECHO test failed for ${aet}`, { error });
+                    }
+
+                    return modalityStatus;
+                })
+            );
+
+            setAvailableRobots(modalitiesArray);
+            logger.info('Loaded available robots', { count: modalitiesArray.length });
+        } catch (error) {
+            logger.error('Failed to load robots', { error });
+        } finally {
+            setLoadingRobots(false);
+        }
+    };
+
+    loadRobots();
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -227,13 +287,17 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             )
          }
          {/* option - robots */}
-            <DropDown
-                label="Available System"
-                value={selectedRobot}
-                onChange={setSelectedRobot}
-                placeholder="-- Select a robot --"
-                options={[] /* TODO: populate with available robots */}
-            />
+         <DropDown
+            label="Available System"
+            value={selectedRobot}
+            onChange={setSelectedRobot}
+            placeholder={loadingRobots ? "Loading robots..." : "-- Select a robot --"}
+            options={availableRobots.map(robot => ({
+                value: robot.aet,
+                label: `${robot.aet} @ ${robot.host}:${robot.port} (${robot.isOnline ? '🟢 Online' : '🔴 Offline'}${robot.responseTime ? ` - ${robot.responseTime}ms` : ''})`
+            }))}
+            disabled={loadingRobots || availableRobots.length === 0}
+        />
         </div>
       </div>
     </div>

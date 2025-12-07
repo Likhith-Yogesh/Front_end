@@ -78,13 +78,46 @@ export const createNewModality = async (modalityName: string, modalityData:strin
     return { status: response.status, data };
 }
 
+// Get all modalities or specific modality by ID
+export const getModalities = async (modalityID?: string) => {
+    const endpoint = modalityID 
+        ? `${API_BASE_URL}/modalities/${modalityID}`
+        : `${API_BASE_URL}/modalities?expand`;
+    
+    const response = await fetch(endpoint, {
+        headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+}
+
+// Test modality connectivity using DICOM C-ECHO
+export const testModalityEcho = async (modalityID: string) => {
+    const response = await fetch(`${API_BASE_URL}/modalities/${modalityID}/echo`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+    });
+    
+    let data: any = null;
+    try {
+        data = await response.json();
+    } catch (error) {
+        // C-ECHO may return empty response on success
+        data = response.ok;
+    }
+    
+    return { status: response.status, data };
+}
+
 const OrthancAPI = {
     getSystemInfo,
     getPatients,
     getStudies,
     getSeries,
     getInstanceAllTags,
-    createNewModality
+    createNewModality,
+    getModalities,
+    testModalityEcho
 };
 
 export default OrthancAPI;
