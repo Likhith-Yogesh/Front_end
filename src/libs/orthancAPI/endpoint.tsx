@@ -7,14 +7,11 @@ const orthancConfig = {
     password: config.password
 };
 
-let API_BASE_URL = `/orthanc-api`; // defined in vite.config for proxying
+let API_BASE_URL = `/orthanc-api`;
 const getAuthHeaders = () => ({
     'Authorization': 'Basic ' + btoa(`${orthancConfig.username}:${orthancConfig.password}`)
 });
 
-// --------------------- Orthanc API ---------------------
-// API_BASE_URL/system
-// call the api to get system info with basic auth headers
 export const getSystemInfo = async () => {
     const response = await fetch(`${API_BASE_URL}/system`, {
         headers: getAuthHeaders()
@@ -78,7 +75,6 @@ export const createNewModality = async (modalityName: string, modalityData:strin
     return { status: response.status, data };
 }
 
-// Get all modalities or specific modality by ID
 export const getModalities = async (modalityID?: string) => {
     const endpoint = modalityID 
         ? `${API_BASE_URL}/modalities/${modalityID}`
@@ -91,10 +87,10 @@ export const getModalities = async (modalityID?: string) => {
     return { status: response.status, data };
 }
 
-// Test modality connectivity using DICOM C-ECHO
 export const testModalityEcho = async (modalityID: string) => {
+    const method: HttpMethod = 'POST';
     const response = await fetch(`${API_BASE_URL}/modalities/${modalityID}/echo`, {
-        method: 'POST',
+        method,
         headers: getAuthHeaders()
     });
     
@@ -102,7 +98,6 @@ export const testModalityEcho = async (modalityID: string) => {
     try {
         data = await response.json();
     } catch (error) {
-        // C-ECHO may return empty response on success
         data = response.ok;
     }
     

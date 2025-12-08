@@ -63,28 +63,29 @@ interface ExamViewTablePopupWindowProps {
   readonly onClose: () => void;
 }
 
-// ========== MODALITY MANAGEMENT FUNCTIONS (NEW) ==========
+// ========== MODALITY MANAGEMENT FUNCTIONS ==========
 
-// Create or update modality
-export const createOrUpdateModality = async (aet: string, host: string, port: number, manufacturer: string) => {
+export const createOrUpdateModality = async (aet: string, host: string, port: number) => {
     try {
-        const modalityData = JSON.stringify([aet, host, port, manufacturer]);
+        const modalityData = JSON.stringify([aet, host, port, 'Generic']);
         const response = await createNewModality(aet, modalityData);
         
         if (response.status === 200 || response.status === 201) {
             logger.info(`Modality ${aet} created/updated successfully`);
             return { success: true, data: response.data };
         } else {
-            logger.error(`Failed to create/update modality`, { status: response.status });
+            logger.error(`Failed to create/update modality ${aet}`, { 
+                status: response.status, 
+                error: response.data 
+            });
             return { success: false, error: response.data };
         }
     } catch (error) {
-        logger.error(`Error creating/updating modality`, { error });
+        logger.error(`Error creating/updating modality ${aet}`, { error });
         return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
     }
 };
 
-// Delete modality
 export const deleteModality = async (aet: string) => {
     try {
         const response = await fetch(`/orthanc-api/modalities/${aet}`, {
@@ -99,7 +100,10 @@ export const deleteModality = async (aet: string) => {
             return { success: true };
         } else {
             const errorText = await response.text();
-            logger.error(`Failed to delete modality ${aet}`, { status: response.status, error: errorText });
+            logger.error(`Failed to delete modality ${aet}`, { 
+                status: response.status, 
+                error: errorText 
+            });
             return { success: false, error: errorText };
         }
     } catch (error) {
@@ -108,16 +112,13 @@ export const deleteModality = async (aet: string) => {
     }
 };
 
-// Test modality connectivity with manual refresh
 export const testModalityConnection = async (aet: string) => {
     try {
-        const startTime = Date.now();
         const response = await testModalityEcho(aet);
-        const responseTime = Date.now() - startTime;
 
         if (response.status === 200) {
-            logger.info(`C-ECHO success for modality ${aet}`, { responseTime });
-            return { success: true, responseTime };
+            logger.info(`C-ECHO success for modality ${aet}`);
+            return { success: true };
         } else {
             logger.warn(`C-ECHO failed for modality ${aet}`, { status: response.status });
             return { success: false, status: response.status };
@@ -130,44 +131,50 @@ export const testModalityConnection = async (aet: string) => {
 
 // ========== END MODALITY MANAGEMENT FUNCTIONS ==========
 
-// fetch the study details by studyID
 const fetchStudyDetails = async (studyID: string): Promise<StudyProp | null> => {
     try {
         const response = await getStudies(studyID);
         const data = response.data as StudyProp;
+        // Validation check: Ensure response is a valid Study type with required ID
         if (data.Type !== "Study" && !data.ID) {
-            logger.error(`Invalid study data: `, { 
+            logger.error(`Invalid study data`, { 
                 code: response.status,
                 studyID: studyID,
-                responseType: data.Type});
+                responseType: data.Type
+            });
             return null;
         }
-        logger.info(`Fetched study details for ID: ${studyID}`, { code: response.status,
-                                                                  body: data });
+        logger.info(`Fetched study details for ID: ${studyID}`, { 
+            code: response.status,
+            body: data 
+        });
         return data;
     } catch (error) {
-        logger.error(`Failed to fetch study details for ID: ${studyID}`, {msgerror: error});
+        logger.error(`Failed to fetch study details for ID: ${studyID}`, { error });
         return null;
     }
 }
 
-// fetch the series details by seriesID
 const fetchSeriesDetails = async (seriesID: string): Promise<SeriesProp | null> => {
     try {
         const response = await getSeries(seriesID);
         const data = response.data as SeriesProp;
+        // Validation check: Ensure response is a valid Series type with required ID
         if (data.Type !== "Series" && !data.ID) {
-            logger.error(`Invalid series data: `, {
+            logger.error(`Invalid series data`, {
                 code: response.status,
                 seriesID: seriesID,
-                responseType: data.Type});
+                responseType: data.Type
+            });
             return null;
         }
-        logger.info(`Fetched series details for ID: ${seriesID}`, { code: response.status,
-                                                                  body: data });
+        logger.info(`Fetched series details for ID: ${seriesID}`, { 
+            code: response.status,
+            body: data 
+        });
         return data;
     } catch (error) {
-        logger.error(`Failed to fetch series details for ID: ${seriesID}`, {msgerror: error});
+        logger.error(`Failed to fetch series details for ID: ${seriesID}`, { error });
         return null;
     }
 }
@@ -183,7 +190,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
   const [availableRobots, setAvailableRobots] = useState<ModalityStatus[]>([]);
   const [loadingRobots, setLoadingRobots] = useState(false);
 
-  // fetch study details when patientDetails change
   useEffect(() => {
     const loadStudies = async (studyIDs: string[]) => {
         setLoading(true);
@@ -197,7 +203,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             studyIDs.map(id => fetchStudyDetails(id))
         );
 
-        // Filter out null values
         const validStudies = studyDetails.filter(s => s !== null) as StudyProp[];
         setStudies(validStudies);
         setLoading(false);
@@ -210,7 +215,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
     }
   }, [patientDetails]);
 
-  // fetch series details when selectStudyID change
   useEffect(() => {
     const loadSeries = async () => {
         setLoadingSeries(true);
@@ -226,7 +230,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             studyDetails.Series.map(id => fetchSeriesDetails(id))
         );
 
-        // Filter out null values
         const validSeries = seriesDetails.filter(s => s !== null) as SeriesProp[];
         setSeries(validSeries);
         setLoadingSeries(false);
@@ -239,7 +242,7 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
     }
   }, [selectedStudyId]);
 
-  // Fetch available robots on component mount
+  // Effect 1: Fetch modalities list (without C-ECHO testing)
   useEffect(() => {
     const loadRobots = async () => {
         setLoadingRobots(true);
@@ -247,52 +250,31 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             const response = await getModalities();
             
             if (response.status !== 200) {
-                logger.error('Failed to fetch modalities', { status: response.status });
+                logger.error(`Failed to fetch modalities from Orthanc`, { 
+                    status: response.status,
+                    error: response.data 
+                });
                 setLoadingRobots(false);
                 return;
             }
 
             const modalitiesData = response.data;
             
-            // Transform Orthanc modality data to ModalityStatus format
-            const modalitiesArray = await Promise.all(
-                Object.entries(modalitiesData).map(async ([aet, config]: [string, any]) => {
-                    const modalityStatus: ModalityStatus = {
-                        aet: aet,
-                        host: config[1] || config.Host || 'Unknown',
-                        port: config[2] || config.Port || 4242,
-                        manufacturer: config[3] || config.Manufacturer || 'Generic',
-                        isOnline: false,
-                        isCreatedSuccessfully: true, // If it exists in Orthanc, it was created successfully
-                        lastChecked: new Date().toISOString(),
-                        responseTime: null
-                    };
-
-                    // Test connectivity with C-ECHO
-                    try {
-                        const startTime = Date.now();
-                        const echoResponse = await testModalityEcho(aet);
-                        const responseTime = Date.now() - startTime;
-                        
-                        if (echoResponse.status === 200) {
-                            modalityStatus.isOnline = true;
-                            modalityStatus.responseTime = responseTime;
-                            logger.info(`Modality ${aet} is online`, { responseTime });
-                        } else {
-                            logger.warn(`Modality ${aet} C-ECHO failed`, { status: echoResponse.status });
-                        }
-                    } catch (error) {
-                        logger.error(`C-ECHO test failed for ${aet}`, { error });
-                    }
-
-                    return modalityStatus;
-                })
-            );
+            const modalitiesArray: ModalityStatus[] = Object.entries(modalitiesData).map(([aet, config]: [string, any]) => {
+                return {
+                    aet: aet,
+                    host: config[1] || config.Host || 'Unknown',
+                    port: config[2] || config.Port || 4242,
+                    isOnline: false,
+                    isCreatedSuccessfully: true,
+                    lastChecked: new Date().toISOString()
+                };
+            });
 
             setAvailableRobots(modalitiesArray);
-            logger.info('Loaded available robots', { count: modalitiesArray.length });
+            logger.info('Loaded available robots from Orthanc', { count: modalitiesArray.length });
         } catch (error) {
-            logger.error('Failed to load robots', { error });
+            logger.error('Failed to load robots from Orthanc', { error });
         } finally {
             setLoadingRobots(false);
         }
@@ -300,6 +282,51 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
 
     loadRobots();
   }, []);
+
+  // Effect 2: Test connectivity separately (runs after modalities are loaded)
+  useEffect(() => {
+    if (availableRobots.length === 0 || loadingRobots) return;
+
+    const testConnectivity = async () => {
+        logger.info('Starting C-ECHO connectivity tests for all modalities');
+        
+        const updatedRobots = await Promise.all(
+            availableRobots.map(async (robot) => {
+                try {
+                    const echoResponse = await testModalityEcho(robot.aet);
+                    
+                    if (echoResponse.status === 200) {
+                        logger.info(`Modality ${robot.aet} is online`);
+                        return { 
+                            ...robot, 
+                            isOnline: true,
+                            lastChecked: new Date().toISOString()
+                        };
+                    } else {
+                        logger.warn(`Modality ${robot.aet} C-ECHO failed`, { 
+                            status: echoResponse.status 
+                        });
+                        return {
+                            ...robot,
+                            lastChecked: new Date().toISOString()
+                        };
+                    }
+                } catch (error) {
+                    logger.error(`C-ECHO test failed for ${robot.aet}`, { error });
+                    return {
+                        ...robot,
+                        lastChecked: new Date().toISOString()
+                    };
+                }
+            })
+        );
+        
+        setAvailableRobots(updatedRobots);
+        logger.info('C-ECHO connectivity testing completed');
+    };
+
+    testConnectivity();
+  }, [availableRobots.length, loadingRobots]);
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -313,7 +340,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
           </button>
         </div>
         <div className="p-6">
-          {/* option - study */}
           {loading && (
             <p className="text-slate-400 text-center">Loading studies...</p>
           )}
@@ -332,7 +358,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
                 }))}
               />
           )}
-          {/* option - series */}
           {!selectedStudyId && (
             <p className="text-slate-400 text-center">Please select study first</p>
           )}
@@ -353,7 +378,6 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             />
             )
          }
-         {/* option - robots */}
          <DropDown
             label="Available System"
             value={selectedRobot}
@@ -361,7 +385,7 @@ export default function ExamViewTablePopupWindow({ patientDetails, onClose }: Re
             placeholder={loadingRobots ? "Loading robots..." : "-- Select a robot --"}
             options={availableRobots.map(robot => ({
                 value: robot.aet,
-                label: `${robot.aet} @ ${robot.host}:${robot.port} (${robot.isOnline ? '🟢 Online' : '🔴 Offline'}${robot.responseTime ? ` - ${robot.responseTime}ms` : ''})`
+                label: `${robot.aet} @ ${robot.host}:${robot.port} (${robot.isOnline ? '🟢 Online' : '🔴 Offline'})`
             }))}
             disabled={loadingRobots || availableRobots.length === 0}
         />
