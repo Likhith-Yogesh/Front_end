@@ -1,4 +1,4 @@
-import { getStudies, getSeries, getModalities, testModalityEcho } from "../libs/orthancAPI/endpoint";
+import { getStudies, getSeries, getModalities, testModalityEcho, createNewModality } from "../libs/orthancAPI/endpoint";
 import logger from "../libs/logger";
 import DropDown from "./dropDown";
 import { PatientProp } from './ExamViewTableBlock';
@@ -62,6 +62,73 @@ interface ExamViewTablePopupWindowProps {
   readonly patientDetails: PatientProp;
   readonly onClose: () => void;
 }
+
+// ========== MODALITY MANAGEMENT FUNCTIONS (NEW) ==========
+
+// Create or update modality
+export const createOrUpdateModality = async (aet: string, host: string, port: number, manufacturer: string) => {
+    try {
+        const modalityData = JSON.stringify([aet, host, port, manufacturer]);
+        const response = await createNewModality(aet, modalityData);
+        
+        if (response.status === 200 || response.status === 201) {
+            logger.info(`Modality ${aet} created/updated successfully`);
+            return { success: true, data: response.data };
+        } else {
+            logger.error(`Failed to create/update modality`, { status: response.status });
+            return { success: false, error: response.data };
+        }
+    } catch (error) {
+        logger.error(`Error creating/updating modality`, { error });
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+};
+
+// Delete modality
+export const deleteModality = async (aet: string) => {
+    try {
+        const response = await fetch(`/orthanc-api/modalities/${aet}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Basic ' + btoa('TestUser:Globus1234!')
+            }
+        });
+
+        if (response.ok) {
+            logger.info(`Modality ${aet} deleted successfully`);
+            return { success: true };
+        } else {
+            const errorText = await response.text();
+            logger.error(`Failed to delete modality ${aet}`, { status: response.status, error: errorText });
+            return { success: false, error: errorText };
+        }
+    } catch (error) {
+        logger.error(`Error deleting modality ${aet}`, { error });
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+};
+
+// Test modality connectivity with manual refresh
+export const testModalityConnection = async (aet: string) => {
+    try {
+        const startTime = Date.now();
+        const response = await testModalityEcho(aet);
+        const responseTime = Date.now() - startTime;
+
+        if (response.status === 200) {
+            logger.info(`C-ECHO success for modality ${aet}`, { responseTime });
+            return { success: true, responseTime };
+        } else {
+            logger.warn(`C-ECHO failed for modality ${aet}`, { status: response.status });
+            return { success: false, status: response.status };
+        }
+    } catch (error) {
+        logger.error(`C-ECHO error for modality ${aet}`, { error });
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+};
+
+// ========== END MODALITY MANAGEMENT FUNCTIONS ==========
 
 // fetch the study details by studyID
 const fetchStudyDetails = async (studyID: string): Promise<StudyProp | null> => {
