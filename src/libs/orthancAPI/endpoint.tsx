@@ -7,14 +7,11 @@ const orthancConfig = {
     password: config.password
 };
 
-let API_BASE_URL = `/orthanc-api`; // defined in vite.config for proxying
+let API_BASE_URL = `/orthanc-api`;
 const getAuthHeaders = () => ({
     'Authorization': 'Basic ' + btoa(`${orthancConfig.username}:${orthancConfig.password}`)
 });
 
-// --------------------- Orthanc API ---------------------
-// API_BASE_URL/system
-// call the api to get system info with basic auth headers
 export const getSystemInfo = async () => {
     const response = await fetch(`${API_BASE_URL}/system`, {
         headers: getAuthHeaders()
@@ -78,13 +75,44 @@ export const createNewModality = async (modalityName: string, modalityData:strin
     return { status: response.status, data };
 }
 
+export const getModalities = async (modalityID?: string) => {
+    const endpoint = modalityID 
+        ? `${API_BASE_URL}/modalities/${modalityID}`
+        : `${API_BASE_URL}/modalities?expand`;
+    
+    const response = await fetch(endpoint, {
+        headers: getAuthHeaders()
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+}
+
+export const testModalityEcho = async (modalityID: string) => {
+    const method: HttpMethod = 'POST';
+    const response = await fetch(`${API_BASE_URL}/modalities/${modalityID}/echo`, {
+        method,
+        headers: getAuthHeaders()
+    });
+    
+    let data: any = null;
+    try {
+        data = await response.json();
+    } catch (error) {
+        data = response.ok;
+    }
+    
+    return { status: response.status, data };
+}
+
 const OrthancAPI = {
     getSystemInfo,
     getPatients,
     getStudies,
     getSeries,
     getInstanceAllTags,
-    createNewModality
+    createNewModality,
+    getModalities,
+    testModalityEcho
 };
 
 export default OrthancAPI;
